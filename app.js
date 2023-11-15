@@ -5,13 +5,13 @@ const connectDB = require("./db/connect");
 
 const PORT = process.env.PORT || 5000;
 
-const products_routes = require("./routes/products")
+const exercises_routes = require("./routes/exercises")
 
 app.get("/",(req, res) => {
     res.send("Hi, I am live");
 });
 
-app.use("/api/products", products_routes);
+app.use("/api/exercises", exercises_routes);
 
 const start = async () => {
     try {
