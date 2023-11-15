@@ -1,8 +1,11 @@
+require("dotenv").config();
+
 const Food = require("../models/food");
 const PORT = process.env.PORT || 5000;
+const URL = process.env.HOST_URL
 
 const getImageURL = imageName => {
-    return `http://localhost:${PORT}/food/img/${imageName}.jpg`;
+    return `${URL}:${PORT}/food/img/${imageName}.jpg`;
 };
 
 const getAllFoods = async (req, res) => {
