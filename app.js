@@ -14,6 +14,7 @@ app.get("/",(req, res) => {
 
 app.use("/api/exercises", exercises_routes);
 app.use("/api/foods", foods_routes);
+app.use("/food/img",express.static(__dirname + '/data/food_img'));
 
 const start = async () => {
     try {

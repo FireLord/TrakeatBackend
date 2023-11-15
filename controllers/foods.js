@@ -1,4 +1,9 @@
 const Food = require("../models/food");
+const PORT = process.env.PORT || 5000;
+
+const getImageURL = imageName => {
+    return `http://localhost:${PORT}/food/img/${imageName}.jpg`;
+};
 
 const getAllFoods = async (req, res) => {
     const { mealType, cuisineType, tag , q } = req.query;
@@ -30,7 +35,14 @@ const getAllFoods = async (req, res) => {
     apiData.skip(skip).limit(limit);
 
     const foods = await apiData;
-    res.status(200).json({ foods });
+    
+    // Map each food item to include the full image URL
+    const foodsWithImageURLs = foods.map(food => ({
+        ...food._doc,
+        image: getImageURL(food._id),
+    }));
+
+    res.status(200).json({ foods: foodsWithImageURLs });
 };
 
 const getAllFoodsTesting = async (req, res) => {
