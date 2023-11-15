@@ -22,11 +22,7 @@ const productSchema = new mongoose.Schema({
         default: Date.now()
     },
     company: {
-        type: String,
-        enum: {
-            values:["apple","samsung","dell","mi"],
-            message: `{VALUE} is not supported`
-        }
+        type: String
     }
 });
 
