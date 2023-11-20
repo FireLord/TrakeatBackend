@@ -23,13 +23,13 @@ const checkApiKey = (req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Hi, I am live");
 });
+app.use("/food/img", express.static(__dirname + '/data/food_img'));
 
 // Apply middleware
 app.use(checkApiKey);
 
 app.use("/api/exercises", exercises_routes);
 app.use("/api/foods", foods_routes);
-app.use("/food/img", express.static(__dirname + '/data/food_img'));
 
 const start = async () => {
   try {
