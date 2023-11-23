@@ -9,7 +9,7 @@ const getImageURL = imageName => {
 };
 
 const getAllFoods = async (req, res) => {
-    const { mealType, cuisineType, tag , q } = req.query;
+    const { mealType, cuisineType, tag , q , healthLabels, dietLabels } = req.query;
     const queryObject = {};
 
     if(mealType){
@@ -22,6 +22,14 @@ const getAllFoods = async (req, res) => {
 
     if(tag){
         queryObject.tag = tag;
+    }
+
+    if(healthLabels){
+        queryObject.healthLabels = healthLabels;
+    }
+
+    if(dietLabels){
+        queryObject.dietLabels = dietLabels;
     }
 
     if(q){
