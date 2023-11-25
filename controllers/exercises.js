@@ -14,4 +14,4 @@ const getAllExercisesTesting = async (req, res) => {
     res.status(200).json({ exercises });
 };
 
-module.exports = {getAllExercises,getAllExercisesTesting};
+module.exports = { getAllExercises, getAllExercisesTesting };

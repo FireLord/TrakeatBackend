@@ -9,37 +9,37 @@ const getImageURL = imageName => {
 };
 
 const getAllFoods = async (req, res) => {
-    const { mealType, cuisineType, tag , q , healthLabels, dietLabels, random } = req.query;
+    const { mealType, cuisineType, tag, q, healthLabels, dietLabels, random } = req.query;
     const queryObject = {};
 
-    if(mealType){
+    if (mealType) {
         queryObject.mealType = { $regex: mealType, $options: "i" };
     }
 
-    if(cuisineType){
+    if (cuisineType) {
         queryObject.cuisineType = cuisineType;
     }
 
-    if(tag){
+    if (tag) {
         queryObject.tag = tag;
     }
 
-    if(healthLabels){
+    if (healthLabels) {
         queryObject.healthLabels = healthLabels;
     }
 
-    if(dietLabels){
+    if (dietLabels) {
         queryObject.dietLabels = dietLabels;
     }
 
-    if(q){
+    if (q) {
         queryObject.label = { $regex: q, $options: "i" };
     }
 
     let apiData;
 
     if (random === 'true') {
-        apiData = Food.aggregate([{ $match: queryObject }, { $sample: { size: 2000 }}]);
+        apiData = Food.aggregate([{ $match: queryObject }, { $sample: { size: 2000 } }]);
     } else {
         apiData = Food.find(queryObject);
     }
@@ -47,12 +47,12 @@ const getAllFoods = async (req, res) => {
     let page = Number(req.query.page) || 1;
     let limit = Number(req.query.limit) || 10;
 
-    let skip = (page -1) * limit;
+    let skip = (page - 1) * limit;
 
     apiData.skip(skip).limit(limit);
 
     const foods = await apiData;
-    
+
     // Map each food item to include the full image URL
     const foodsWithImageURLs = foods.map(food => ({
         ...food._doc || food,
