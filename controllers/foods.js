@@ -25,7 +25,11 @@ const getAllFoods = async (req, res) => {
     }
 
     if (healthLabels) {
-        queryObject.healthLabels = healthLabels;
+        if (healthLabels.includes('NonVegetarian')) {
+            queryObject.healthLabels = { $not: { $in: ["Vegetarian"] } };
+        } else {
+            queryObject.healthLabels = healthLabels;
+        }
     }
 
     if (dietLabels) {
