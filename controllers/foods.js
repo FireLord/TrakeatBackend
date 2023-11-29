@@ -26,17 +26,17 @@ const getAllFoods = async (req, res) => {
 
     if (healthLabels && healthLabels.includes('NonVegetarian')) {
         // Check for non-veg items based on specific terms in the label
-        queryObject.label = { $regex: /(chicken|meat|egg|lamb|fish|beef|pork)/i };
-    
+        queryObject.label = { $regex: /(chicken|meat|egg|lamb|fish|beef|pork|dhansak)/i };
+
         // Exclude items with 'Vegetarian' tag in healthLabels for non-veg
-        queryObject.healthLabels = { $not: { $in: ['Vegetarian'] } };
+        queryObject.healthLabels = { $nin: ['Vegetarian', 'Vegan'] };
     } else {
         // Check for vegetarian items based on the absence of non-vegetarian terms in the label
-        queryObject.label = { $not: { $regex: /(chicken|meat|egg|lamb|fish|beef|pork)/i } };
-    
+        queryObject.label = { $not: { $regex: /(chicken|meat|egg|lamb|fish|beef|pork|dhansak)/i } };
+
         // Include items with 'Vegetarian' tag in healthLabels for vegetarian
         if (healthLabels && healthLabels.includes('Vegetarian')) {
-            queryObject.healthLabels = 'Vegetarian';
+            queryObject.healthLabels = { $in: ['Vegetarian', 'Vegan'] };
         } else if (healthLabels) {
             let healthLabelsArray = Array.isArray(healthLabels) ? healthLabels : [healthLabels];
             queryObject.healthLabels = { $in: healthLabelsArray };
