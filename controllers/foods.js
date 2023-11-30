@@ -19,7 +19,7 @@ const getAllFoods = async (req, res) => {
         }
 
         if (cuisineType) {
-            queryObject.cuisineType = cuisineType;
+            queryObject.cuisineType = { $in: cuisineType.split(",") };
         }
 
         if (tag) {
@@ -30,18 +30,20 @@ const getAllFoods = async (req, res) => {
 
         let labelQuery;
 
-        if(healthLabels) {
+        if (healthLabels) {
             healthLabels = healthLabels.split(",")
             if (healthLabels.includes('NonVegetarian')) {
                 // Check for non-veg items based on specific terms in the label
                 labelQuery = { $regex: regex.source, $options: regex.flags };
-            
+
+                let tempHealthLabels = healthLabels.filter(hl => hl !== "NonVegetarian");
+
                 // Exclude items with 'Vegetarian' tag in healthLabels for non-veg
-                queryObject.healthLabels = { $nin: ['Vegetarian', 'Vegan'], $in: healthLabels };
+                queryObject.healthLabels = { $nin: ['Vegetarian', 'Vegan'], ...(tempHealthLabels.length ? { $in: healthLabels } : {}) };
             } else if (healthLabels.includes('Vegetarian')) {
                 // Check for vegetarian items based on the absence of non-vegetarian terms in the label
                 labelQuery = { $not: { $regex: regex.source, $options: regex.flags } };
-            
+
                 // Include items with 'Vegetarian' tag in healthLabels for vegetarian
                 queryObject.healthLabels = { $in: [...healthLabels, ...['Vegetarian', 'Vegan']] };
             } else {
@@ -50,7 +52,7 @@ const getAllFoods = async (req, res) => {
         }
 
         if (dietLabels) {
-            queryObject.dietLabels = {$in: dietLabels.split(",")};
+            queryObject.dietLabels = { $in: dietLabels.split(",") };
         }
 
         if (q) {
