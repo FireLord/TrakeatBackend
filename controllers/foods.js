@@ -11,19 +11,19 @@ const getImageURL = imageName => {
 const getAllFoods = async (req, res) => {
     try {
         const { mealType, cuisineType, tag, q, dietLabels, random } = req.query;
-        const queryObject = {};
+        const queryObject = [];
         let healthLabels = req.query.healthLabels;
 
         if (mealType) {
-            queryObject.mealType = { $regex: mealType, $options: "i" };
+            queryObject.push({ $match: { mealType: { $regex: mealType, $options: "i" } } });
         }
 
         if (cuisineType) {
-            queryObject.cuisineType = { $in: cuisineType.split(",") };
+            queryObject.push({ $match: { cuisineType: { $in: cuisineType.split(",") } } });
         }
 
         if (tag) {
-            queryObject.tag = tag;
+            queryObject.push({ $match: { tag } });
         }
 
         const regex = /(chicken|meat|egg|lamb|fish|beef|pork|dhansak)/i;
@@ -31,7 +31,8 @@ const getAllFoods = async (req, res) => {
         let labelQuery;
 
         if (healthLabels) {
-            healthLabels = healthLabels.split(",")
+            healthLabels = healthLabels.split(",");
+
             if (healthLabels.includes('NonVegetarian')) {
                 // Check for non-veg items based on specific terms in the label
                 labelQuery = { $regex: regex.source, $options: regex.flags };
@@ -39,63 +40,71 @@ const getAllFoods = async (req, res) => {
                 let tempHealthLabels = healthLabels.filter(hl => hl !== "NonVegetarian");
 
                 // Exclude items with 'Vegetarian' tag in healthLabels for non-veg
-                queryObject.healthLabels = { $nin: ['Vegetarian', 'Vegan'], ...(tempHealthLabels.length ? { $in: healthLabels } : {}) };
+                queryObject.push({
+                    $match: {
+                        healthLabels: {
+                            $nin: ['Vegetarian', 'Vegan'],
+                            ...(tempHealthLabels.length ? { $in: healthLabels } : {})
+                        }
+                    }
+                });
             } else if (healthLabels.includes('Vegetarian')) {
                 // Check for vegetarian items based on the absence of non-vegetarian terms in the label
                 labelQuery = { $not: { $regex: regex.source, $options: regex.flags } };
 
                 // Include items with 'Vegetarian' tag in healthLabels for vegetarian
-                queryObject.healthLabels = { $in: [...healthLabels, ...['Vegetarian', 'Vegan']] };
+                queryObject.push({
+                    $match: {
+                        healthLabels: { $in: [...healthLabels, ...['Vegetarian', 'Vegan']] }
+                    }
+                });
             } else {
-                queryObject.healthLabels = { $in: healthLabels };
+                queryObject.push({ $match: { healthLabels: { $in: healthLabels } } });
             }
         }
 
         if (dietLabels) {
-            queryObject.dietLabels = { $in: dietLabels.split(",") };
+            queryObject.push({ $match: { dietLabels: { $in: dietLabels.split(",") } } });
         }
 
         if (q) {
             if (labelQuery) {
-                queryObject.$and = [
-                    {
-                        "label": labelQuery
-                    },
-                    {
-                        "label": { "$regex": q, "$options": "i" }
+                queryObject.push({
+                    $match: {
+                        $and: [
+                            { "label": labelQuery },
+                            { "label": { "$regex": q, "$options": "i" } }
+                        ]
                     }
-                ];
+                });
             } else {
-                queryObject.label = { "$regex": q, "$options": "i" }
+                queryObject.push({ $match: { label: { "$regex": q, "$options": "i" } } });
             }
         } else {
-            labelQuery && (queryObject.label = labelQuery)
+            labelQuery && queryObject.push({ $match: { label: labelQuery } });
         }
-
-        let apiData;
 
         if (random === 'true') {
-            apiData = Food.aggregate([{ $match: queryObject }, { $sample: { size: 2000 } }]);
-        } else {
-            apiData = Food.find(queryObject).lean();
+            queryObject.push({ $sample: { size: 2000 } });
         }
 
-        let page = Number(req.query.page) || 1;
-        let limit = Number(req.query.limit) || 10;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
 
-        let skip = (page - 1) * limit;
+        const skip = (page - 1) * limit;
 
-        apiData.skip(skip).limit(limit);
+        queryObject.push({ $skip: skip });
+        queryObject.push({ $limit: limit });
 
-        const foods = await apiData;
+        queryObject.push({
+            $addFields: {
+                image: { $concat: [`${URL}/food/img/`, { $toString: "$_id" }, '.jpg'] },
+            },
+        });
 
-        // Map each food item to include the full image URL
-        const foodsWithImageURLs = foods.map(food => ({
-            ...food._doc || food,
-            image: getImageURL(food._id),
-        }));
+        const foods = await Food.aggregate(queryObject);
 
-        res.status(200).json({ foods: foodsWithImageURLs });
+        res.status(200).json({ foods });
     } catch (error) {
         console.error(error);
     }
