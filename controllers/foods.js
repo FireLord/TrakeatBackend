@@ -3,6 +3,7 @@ require("dotenv").config();
 const Food = require("../models/food");
 const PORT = process.env.PORT || 5000;
 const URL = process.env.HOST_URL
+const { ObjectId } = require('mongodb');
 
 const getImageURL = imageName => {
     return `${URL}/food/img/${imageName}.jpg`;
@@ -10,7 +11,7 @@ const getImageURL = imageName => {
 
 const getAllFoods = async (req, res) => {
     try {
-        const { mealType, cuisineType, tag, q, dietLabels, random } = req.query;
+        const { mealType, cuisineType, tag, q, dietLabels, random, foodId } = req.query;
         const queryObject = [];
         let healthLabels = req.query.healthLabels;
 
@@ -24,6 +25,10 @@ const getAllFoods = async (req, res) => {
 
         if (tag) {
             queryObject.push({ $match: { tag } });
+        }
+
+        if (foodId) {
+            queryObject.push({ $match: { _id: new ObjectId(foodId) } });
         }
 
         const regex = /(chicken|meat|egg|lamb|fish|beef|pork|dhansak)/i;
