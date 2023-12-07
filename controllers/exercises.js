@@ -1,12 +1,24 @@
 const Exercise = require("../models/exercise");
+const { ObjectId } = require('mongodb');
 
 const getAllExercises = async (req, res) => {
-    const queryObject = {};
+    try {
+        const { exerciseId } = req.query;
+        const queryObject = [];
 
-    let apiData = Exercise.find(queryObject);
+        if (exerciseId) {
+            queryObject.push({ $match: { _id: new ObjectId(exerciseId) } });
+        } else {
+            queryObject.push({ $skip: 0 });
+        }
 
-    const exercises = await apiData;
-    res.status(200).json({ exercises });
+        let apiData = Exercise.aggregate(queryObject);
+
+        const exercises = await apiData;
+        res.status(200).json({ exercises });
+    } catch (error) {
+        console.error(error);
+    }
 };
 
 const getAllExercisesTesting = async (req, res) => {
